@@ -7,8 +7,6 @@
    variables are used, not their values.
    =================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
-
 :root{
   --bg:#FAF0DE; --card:#FFFAF0; --primary:#ED9E6B; --secondary:#8CBA8C;
   --coin:#F0C759; --heart:#DE7882; --bathroom:#9E7852;

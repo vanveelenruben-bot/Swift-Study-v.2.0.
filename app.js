@@ -406,10 +406,18 @@ function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&l
 // ends up on the page (screen content, modals, tab bar, all of it).
 function ic(name, cls = '') { return `<i data-lucide="${name}" class="ic ${cls}"></i>`; }
 (function hydrateIconsForever() {
-  const run = () => { try { window.lucide?.createIcons(); } catch { /* best-effort */ } };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
-  else run();
-  new MutationObserver(run).observe(document.documentElement, { childList: true, subtree: true });
+  let scheduled = false;
+  const run = () => {
+    scheduled = false;
+    try { window.lucide?.createIcons(); } catch { /* best-effort */ }
+  };
+  // Batch with requestAnimationFrame instead of running synchronously on
+  // every single mutation — avoids hammering the main thread when a
+  // render swaps in a big chunk of HTML at once.
+  const schedule = () => { if (!scheduled) { scheduled = true; requestAnimationFrame(run); } };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', schedule);
+  else schedule();
+  new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
 })();
 
 
@@ -2101,10 +2109,26 @@ function wireLogin() {
 // ---------------------------------------------------------------
 // INIT
 // ---------------------------------------------------------------
-applyTheme();
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-  if ((localStorage.getItem(StorageKeys.appearance)||'system') === 'system') applyTheme();
+// On-screen error banner — since phones have no visible console, any
+// uncaught error gets displayed right on the page instead of just
+// silently freezing things.
+window.addEventListener('error', (e) => {
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b00020;color:#fff;font:12px monospace;padding:10px;white-space:pre-wrap;max-height:40vh;overflow:auto;';
+  box.textContent = 'JS error: ' + e.message + '\n' + (e.filename||'') + ':' + (e.lineno||'') + ':' + (e.colno||'');
+  document.body.appendChild(box);
 });
-wireLogin();
-if (localStorage.getItem(StorageKeys.isLoggedIn) === 'true') showApp();
-else showLogin();
+
+try { applyTheme(); } catch (e) { console.error('applyTheme failed', e); }
+try {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if ((localStorage.getItem(StorageKeys.appearance)||'system') === 'system') applyTheme();
+  });
+} catch (e) { console.error('theme listener failed', e); }
+
+try { wireLogin(); } catch (e) { console.error('wireLogin failed', e); }
+
+try {
+  if (localStorage.getItem(StorageKeys.isLoggedIn) === 'true') showApp();
+  else showLogin();
+} catch (e) { console.error('initial screen failed', e); showLogin(); }
