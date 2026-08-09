@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Study Pet</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="logo"><i data-lucide="cat" class="ic"></i></div>
+    <h1>Study Pet</h1>
+    <p>Study to earn coins, feed your pixel pet, and level up.</p>
+    <input class="field" id="login-email" type="email" placeholder="Email" autocomplete="email" />
+    <input class="field" id="login-password" type="password" placeholder="Password" autocomplete="current-password" />
+    <div class="login-error" id="login-error"></div>
+    <button class="btn-primary" id="login-btn">Log In</button>
+    <button class="btn-secondary" id="create-account-btn">Create Account</button>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+    <div id="screen" class="screen"></div>
+    <div id="tabbar"></div>
+  </div>
+
+  <!-- Icon set (replaces emoji for a more native look). Loaded from a
+       CDN, purely presentational — if it fails to load the <i> tags
+       just stay empty, nothing else breaks. -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+
+  <!-- Client-side OCR for Quizzim's "photo → flashcards" feature (see
+       app.js's scanPhotoForText). Loaded from a CDN, entirely in-browser —
+       no server, no API key. If the CDN is unreachable, the feature just
+       tells the user to type notes instead of quietly pretending to work. -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js" defer></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+/* ===================================================================
+   Study Pet — Web
+   Cozy, minimalist, pixel-ish visual language ported from the original
+   SwiftUI app's Theme.swift / AppColorTheme.swift. Color variables are
+   set at runtime by app.js (see THEMES in app.js) based on the chosen
+   color theme + light/dark mode, so this file only defines *how* those
+   variables are used, not their values.
+   =================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+
+:root{
+  --bg:#FAF0DE; --card:#FFFAF0; --primary:#ED9E6B; --secondary:#8CBA8C;
+  --coin:#F0C759; --heart:#DE7882; --bathroom:#9E7852;
+  --text:#594538; --text2:#8C786B; --danger:#D16B6B; --swatch-fg:#594538;
+  --radius-card:24px; --radius-btn:20px;
+  --shadow: 0 4px 14px rgba(0,0,0,.08);
+  color-scheme: light;
+}
+
+*{ box-sizing: border-box; }
+html,body{ margin:0; padding:0; }
+
+/* ---------- Icons (Lucide, hydrated by app.js's ic() + observer) ---------- */
+.ic{ width:1em; height:1em; stroke-width:2.2; vertical-align:-0.15em; }
+.ic-inline{ width:0.95em; height:0.95em; vertical-align:-0.14em; margin-right:2px; }
+.ic-sm{ width:0.8em; height:0.8em; }
+.icon-btn .ic, .tab-icon .ic{ width:20px; height:20px; stroke-width:2; }
+.qi .ic, .shop-pet-emoji .ic{ width:26px; height:26px; }
+.quiz-feature-card .qi .ic{ width:24px; height:24px; }
+.complete-emoji .ic, .game-emoji .ic, .result-emoji .ic{ width:44px; height:44px; stroke-width:1.6; }
+.pet-mood-badge .ic{ width:16px; height:16px; }
+.logo .ic{ width:56px; height:56px; stroke-width:1.6; }
+
+body{
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background .25s ease, color .25s ease;
+}
+/* On anything wider than a phone, give the app a proper backdrop and
+   present it as a floating "device" card instead of a page stretched
+   edge-to-edge — this is the "looks weird on desktop" fix. Mobile
+   layout (the default rules above/below) is untouched. */
+@media (min-width: 760px){
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--primary) 30%, transparent), transparent 55%),
+      radial-gradient(circle at 85% 90%, color-mix(in srgb, var(--secondary) 30%, transparent), transparent 55%),
+      var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    padding: 40px 20px;
+  }
+}
+h1,h2,h3, .pixel{
+  font-family: 'Baloo 2', system-ui, sans-serif;
+}
+button{ font-family: inherit; }
+input{ font-family: inherit; }
+
+.hidden{ display:none !important; }
+
+/* ---------- App shell ---------- */
+#app{
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+@media (min-width: 760px){
+  #app{
+    min-height: 0;
+    height: min(880px, 92vh);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 30px 70px -20px rgba(0,0,0,.35), 0 0 0 1px color-mix(in srgb, var(--text2) 12%, transparent);
+    border: 1px solid rgba(255,255,255,.4);
+  }
+}
+
+.screen{
+  flex: 1;
+  padding: 20px 20px 8px;
+  overflow-y: auto;
+}
+
+.top-row{
+  display:flex; align-items:flex-start; justify-content:space-between;
+  margin-bottom: 20px;
+}
+.greeting{ font-size: 20px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+.streak{ font-size: 13px; color: var(--text2); margin:0; }
+
+.top-right{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+.top-right-icons{ display:flex; gap:8px; }
+
+.icon-btn{
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, white 35%, transparent);
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  color: var(--text2);
+  cursor:pointer; box-shadow: var(--shadow);
+  display:flex; align-items:center; justify-content:center;
+}
+.icon-btn:active{ transform: scale(.94); }
+
+.chip{
+  display:inline-flex; align-items:center; gap:6px;
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, white 35%, transparent);
+  border-radius: 999px; padding: 6px 12px;
+  font-weight: 800; font-size: 14px; box-shadow: var(--shadow);
+  color: var(--text);
+}
+
+/* ---------- Cards ---------- */
+.card{
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, white 35%, transparent);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+/* ---------- Pet ---------- */
+.pet-card{ text-align:center; }
+.pet-face-wrap{
+  position: relative;
+  width: 148px; height: 148px; margin: 4px auto 10px;
+  border-radius: 32px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 22%, transparent), color-mix(in srgb, var(--secondary) 18%, transparent));
+  display:flex; align-items:center; justify-content:center;
+  font-size: 74px;
+  animation: idle-bob 2.6s ease-in-out infinite;
+}
+.pet-face-wrap.eating{ animation: eat-bounce .6s ease; }
+.pet-img{ width: 112px; height: 112px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,.15)); }
+.pet-emoji-art{ font-size: 74px; }
+.pet-mood-badge{
+  position:absolute; top:8px; right:8px; font-size:18px; background: var(--card);
+  border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  box-shadow: var(--shadow);
+}
+@keyframes idle-bob{
+  0%,100%{ transform: translateY(0); }
+  50%{ transform: translateY(-6px); }
+}
+@keyframes eat-bounce{
+  0%{ transform: scale(1); }
+  30%{ transform: scale(1.15) rotate(-4deg); }
+  60%{ transform: scale(.96) rotate(3deg); }
+  100%{ transform: scale(1); }
+}
+.pet-name-btn{
+  background:none; border:none; cursor:pointer;
+  font-family:'Baloo 2', system-ui, sans-serif;
+  font-size: 20px; font-weight: 700; color: var(--text);
+  display:inline-flex; align-items:center; gap:6px;
+}
+.pet-level{ font-size: 13px; font-weight: 800; color: var(--text2); margin-top: 4px; }
+
+/* ---------- Stat bars ---------- */
+.stat-row{ display:flex; align-items:center; gap:10px; margin: 10px 0; }
+.stat-row .icon{ font-size: 18px; width: 22px; text-align:center; }
+.stat-row .label{ font-size: 13px; color: var(--text2); width: 78px; flex-shrink:0; }
+.stat-track{
+  flex:1; height: 10px; border-radius: 6px; background: color-mix(in srgb, var(--text2) 18%, transparent);
+  overflow:hidden;
+}
+.stat-fill{ height:100%; border-radius:6px; transition: width .4s ease; }
+.stat-val{ font-size:12px; color:var(--text2); font-weight:700; width: 30px; text-align:right; }
+
+/* ---------- Buttons ---------- */
+.btn-primary{
+  width:100%; padding: 14px 18px; border:none; border-radius: var(--radius-btn);
+  background: var(--primary); color:#fff; font-weight:800; font-size:15px;
+  cursor:pointer; box-shadow: var(--shadow);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  margin-bottom: 12px;
+}
+.btn-primary:active{ transform: scale(.98); }
+.btn-primary:disabled{ opacity:.45; cursor:not-allowed; }
+.btn-secondary{
+  width:100%; padding: 13px 18px; border: 1.5px solid color-mix(in srgb, var(--text2) 35%, transparent);
+  border-radius: var(--radius-btn); background: transparent; color: var(--text);
+  font-weight:700; font-size:14px; cursor:pointer; margin-bottom:12px;
+}
+.btn-danger{ color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
+
+.feedback-msg{
+  text-align:center; color: var(--danger); font-weight:800; font-size:13px; margin-bottom: 10px;
+}
+
+/* ---------- Tab bar ---------- */
+#tabbar{
+  display:flex; justify-content:space-around;
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-top: 1px solid color-mix(in srgb, white 30%, transparent);
+  padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+  position: sticky; bottom:0;
+}
+.tab-btn{
+  background:none; border:none; cursor:pointer; color: var(--text2);
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  font-size: 11px; font-weight:700; padding: 4px 6px; flex:1;
+}
+.tab-btn .tab-icon{ display:flex; }
+.tab-btn.active{ color: var(--primary); }
+
+/* ---------- Segmented control ---------- */
+.segmented{ display:flex; background: color-mix(in srgb, var(--text2) 14%, transparent); border-radius: 14px; padding:3px; margin-bottom:18px; }
+.segmented button{
+  flex:1; border:none; background:transparent; padding:9px 0; border-radius:11px;
+  font-weight:800; font-size:13px; color: var(--text2); cursor:pointer;
+}
+.segmented button.active{ background: var(--card); color: var(--text); box-shadow: var(--shadow); }
+
+/* ---------- Grids / chips ---------- */
+.chip-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(78px,1fr)); gap:10px; margin-bottom: 14px; }
+.duration-chip{
+  padding: 14px 0; text-align:center; border-radius:16px; font-weight:800; font-size:14px;
+  border: 1.5px solid color-mix(in srgb, var(--text2) 22%, transparent); background: var(--bg); color: var(--text);
+  cursor:pointer;
+}
+.duration-chip.selected{ background: var(--primary); color:#fff; border-color: transparent; }
+
+.stepper-row{ display:flex; align-items:center; justify-content:space-between; padding: 10px 0; font-size:14px; font-weight:600; }
+.stepper-controls{ display:flex; align-items:center; gap:10px; }
+.stepper-controls button{
+  width:28px; height:28px; border-radius:50%; border:none; background: var(--primary); color:#fff;
+  font-weight:800; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+
+.toggle-row{ display:flex; align-items:center; justify-content:space-between; padding: 10px 0; }
+.switch{ position:relative; width:46px; height:26px; }
+.switch input{ opacity:0; width:0; height:0; }
+.slider-pill{
+  position:absolute; inset:0; background: color-mix(in srgb, var(--text2) 30%, transparent);
+  border-radius:999px; cursor:pointer; transition:.2s;
+}
+.slider-pill:before{
+  content:""; position:absolute; width:20px; height:20px; left:3px; top:3px; background:#fff;
+  border-radius:50%; transition:.2s;
+}
+.switch input:checked + .slider-pill{ background: var(--primary); }
+.switch input:checked + .slider-pill:before{ transform: translateX(20px); }
+
+/* ---------- Timer screen ---------- */
+.timer-overlay{
+  position:fixed; inset:0; background: var(--bg); z-index: 50;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding: 24px; max-width:480px; margin:0 auto;
+}
+.timer-phase{ font-size:14px; font-weight:800; color: var(--text2); letter-spacing:.04em; text-transform:uppercase; margin-bottom: 6px;}
+.ring-wrap{ position:relative; width:240px; height:240px; margin: 10px 0 26px; }
+.ring-wrap canvas{ position:absolute; inset:0; }
+.ring-time{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size: 42px; font-weight:800; color: var(--text); font-family:'Baloo 2',sans-serif;
+}
+.timer-controls{ display:flex; gap:14px; width:100%; }
+.timer-controls .btn-primary, .timer-controls .btn-secondary{ margin-bottom:0; }
+.timer-cycle{ font-size:13px; color:var(--text2); margin-bottom: 30px; }
+
+/* ---------- Session complete ---------- */
+.complete-wrap{ text-align:center; }
+.complete-emoji{ display:flex; justify-content:center; color: var(--primary); margin-bottom: 8px; }
+.complete-emoji .ic{ width:64px; height:64px; }
+.result-emoji{ display:flex; justify-content:center; color: var(--primary); margin-bottom: 4px; }
+.reward-pill{
+  display:inline-flex; align-items:center; gap:8px; background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, white 30%, transparent); padding: 10px 20px;
+  border-radius:999px; font-weight:800; font-size:18px; margin: 14px 0 26px; box-shadow: var(--shadow);
+}
+
+/* ---------- Progress ---------- */
+.stat-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+.stat-card{ background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, white 30%, transparent); border-radius:18px; padding:16px; box-shadow: var(--shadow); text-align:center; }
+.stat-card .num{ font-size:26px; font-weight:800; font-family:'Baloo 2',sans-serif; color: var(--primary); }
+.stat-card .cap{ font-size:12px; color: var(--text2); font-weight:700; margin-top:2px; }
+
+/* ---------- Games ---------- */
+.game-card{
+  display:flex; align-items:center; gap:14px; cursor:pointer; padding: 16px;
+}
+.game-emoji{
+  width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+  color: var(--secondary); background: color-mix(in srgb, var(--secondary) 25%, transparent);
+  flex-shrink:0;
+}
+.game-emoji .ic{ width:28px; height:28px; }
+.game-info{ flex:1; }
+.game-title{ font-weight:700; font-family:'Baloo 2',sans-serif; font-size:16px; }
+.game-desc{ font-size:12px; color:var(--text2); margin-top:2px; }
+
+.game-overlay{
+  position:absolute; inset:0; background: var(--bg); z-index:60;
+  display:flex; flex-direction:column; padding: 16px; overflow-y:auto;
+}
+.game-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.game-header .score{ font-weight:800; font-family:'Baloo 2',sans-serif; font-size:18px; }
+
+#pong-canvas{ width:100%; aspect-ratio: 3/4; background: var(--card); border-radius:20px; touch-action:none; box-shadow: var(--shadow); }
+
+.ttt-board{ display:grid; grid-template-columns: repeat(3,1fr); gap:8px; margin: 20px 0; }
+.ttt-cell{
+  aspect-ratio:1; background: var(--card); border-radius:16px; border:none; font-size:40px;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: var(--shadow);
+  color: var(--text); font-weight:800;
+}
+.ttt-status{ text-align:center; font-weight:700; margin-bottom: 6px; color: var(--text2); }
+
+/* ---------- Quizzim ---------- */
+.quiz-model-row{
+  display:flex; align-items:center; gap:12px; padding:12px; border-radius:16px;
+  background: color-mix(in srgb, var(--primary) 14%, transparent); margin-bottom: 14px;
+}
+.quiz-model-row .qi{ font-size:26px; }
+.quiz-model-row .qt{ font-weight:800; font-size:14px; }
+.quiz-model-row .qs{ font-size:11px; color:var(--text2); }
+.badge-locked{
+  margin-left:auto; font-size:10px; font-weight:800; color: var(--text2);
+  background: color-mix(in srgb, var(--text2) 15%, transparent); padding:3px 8px; border-radius:999px;
+}
+.quiz-disabled-row{ opacity:.5; }
+.quiz-thread{
+  display:flex; align-items:center; justify-content:space-between; padding: 12px 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--text2) 14%, transparent); cursor:pointer;
+}
+.quiz-thread:last-child{ border-bottom:none; }
+.quiz-thread .qtt{ font-weight:700; font-size:14px; }
+.quiz-thread .qtd{ font-size:11px; color: var(--text2); }
+.quiz-thread button{ background:none; border:none; color: var(--danger); font-size:16px; cursor:pointer; }
+
+.quiz-feature-row{ display:flex; gap:10px; margin: 4px 0 18px; }
+.quiz-feature-card{
+  flex:1; text-align:left; background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, white 30%, transparent); border-radius: var(--radius-card);
+  padding:14px; box-shadow: var(--shadow); cursor:pointer; color: var(--text);
+}
+.quiz-feature-card .qi{ font-size:24px; }
+.quiz-feature-card .qt{ font-weight:800; font-size:13px; margin-top:6px; }
+.quiz-feature-card .qs{ font-size:11px; color:var(--text2); margin-top:2px; }
+
+.flashcard-face{ text-align:center; min-height:110px; display:flex; flex-direction:column; justify-content:center; }
+
+.quiz-choices{ display:flex; flex-direction:column; gap:10px; }
+.quiz-choice{
+  text-align:left; padding:12px 14px; border-radius:14px; border: 1.5px solid color-mix(in srgb, var(--text2) 25%, transparent);
+  background: var(--card); color: var(--text); font-size:14px; cursor:pointer;
+}
+.quiz-choice-correct{ border-color: var(--secondary); background: color-mix(in srgb, var(--secondary) 22%, var(--card)); }
+.quiz-choice-wrong{ border-color: var(--danger); background: color-mix(in srgb, var(--danger) 18%, var(--card)); }
+
+/* ---------- Offline AI ---------- */
+.offline-progress-track{ height:8px; border-radius:999px; background: color-mix(in srgb, var(--text2) 20%, transparent); overflow:hidden; margin: 8px 0 4px; }
+.offline-progress-fill{ height:100%; width:0%; background: var(--primary); transition: width .2s ease; }
+.offline-toggle-row{ display:flex; align-items:center; gap:8px; font-size:12px; color: var(--text2); margin-top:12px; cursor:pointer; }
+.offline-toggle-row input{ width:16px; height:16px; }
+
+.offline-chat-card{ background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, white 30%, transparent); border-radius: var(--radius-card); box-shadow: var(--shadow); padding:12px; }
+.offline-chat-messages{ max-height:320px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:4px; }
+.chat-bubble{
+  max-width:82%; padding:10px 14px; border-radius:18px; font-size:13px; line-height:1.4;
+  background: color-mix(in srgb, var(--text2) 12%, var(--card)); color: var(--text);
+}
+.chat-bubble-user{ align-self:flex-end; background: var(--primary); color:#fff; }
+.chat-bubble-pet{ align-self:flex-start; }
+.chat-bubble-error{ background: color-mix(in srgb, var(--danger) 20%, var(--card)); }
+.chat-bubble-thinking{ font-style: italic; color: var(--text2); }
+.offline-chat-input-row{ display:flex; gap:8px; margin-top:10px; }
+.offline-chat-input-row .field{ flex:1; }
+.offline-chat-input-row button{ width:44px; border-radius:14px; border:none; font-size:16px; }
+
+.model-size-row{ display:flex; gap:8px; flex-wrap:wrap; }
+.model-size-row button{
+  flex:1; min-width:70px; display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:10px 6px; border-radius:14px; border: 1.5px solid color-mix(in srgb, var(--text2) 25%, transparent);
+  background: var(--card); cursor:pointer;
+}
+.model-size-row button.active{ border-color: var(--primary); background: color-mix(in srgb, var(--primary) 14%, var(--card)); }
+.model-size-row .msn{ font-weight:800; font-size:12px; color: var(--text); }
+.model-size-row .mss{ font-size:10px; color: var(--text2); }
+
+.chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
+.chip-row button{
+  padding:8px 14px; border-radius:999px; border: 1.5px solid color-mix(in srgb, var(--text2) 25%, transparent);
+  background: var(--card); color: var(--text); font-size:13px; font-weight:700; cursor:pointer;
+}
+.chip-row button.active{ border-color: var(--primary); background: color-mix(in srgb, var(--primary) 16%, var(--card)); color: var(--primary); }
+
+/* ---------- Pet Shop ---------- */
+.shop-grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
+.shop-card{
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, white 30%, transparent); border-radius: var(--radius-card); padding: 16px 10px;
+  cursor:pointer; box-shadow: var(--shadow);
+}
+.shop-card:disabled{ cursor:default; }
+.shop-card-active{ border-width: 2px; border-color: var(--primary); }
+.shop-pet-img{ width:64px; height:64px; object-fit:contain; }
+.shop-pet-emoji{ font-size:48px; line-height:64px; }
+.shop-pet-name{ font-weight:700; font-family:'Baloo 2', system-ui, sans-serif; font-size:14px; color: var(--text); }
+.shop-status{ font-size:11px; color: var(--text2); text-align:center; }
+.shop-status-active{ color: var(--primary); font-weight:800; }
+
+/* ---------- Settings modal ---------- */
+.modal-backdrop{
+  position:absolute; inset:0; background: rgba(0,0,0,.35); z-index: 70;
+  display:flex; align-items:flex-end; justify-content:center;
+}
+.modal-sheet{
+  width:100%; max-width:480px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-radius: 24px 24px 0 0;
+  border: 1px solid color-mix(in srgb, white 30%, transparent); border-bottom:none;
+  max-height: 88%; overflow-y:auto; padding: 18px 20px 30px;
+}
+.modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.modal-header h3{ margin:0; font-size:17px; }
+.modal-header button{ background:none; border:none; font-weight:800; color: var(--primary); font-size:15px; cursor:pointer; }
+.section-title{ font-size:12px; font-weight:800; color: var(--text2); text-transform:uppercase; letter-spacing:.03em; margin: 18px 0 8px; }
+.section-title:first-of-type{ margin-top:0; }
+.swatches{ display:flex; gap:14px; justify-content:space-between; }
+.swatch-btn{ background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px; }
+.swatch-dot{ width:34px; height:34px; border-radius:50%; border: 2px solid transparent; display:flex; align-items:center; justify-content:center; }
+.swatch-dot.selected{ border-color: var(--swatch-fg); }
+.swatch-btn .lbl{ font-size:10px; color: var(--text2); font-weight:700; }
+.appearance-row{ display:flex; gap:8px; }
+.appearance-row button{
+  flex:1; padding: 10px 0; border-radius:12px; border:1.5px solid color-mix(in srgb, var(--text2) 25%, transparent);
+  background: var(--card); font-weight:700; font-size:12px; cursor:pointer; color: var(--text);
+}
+.appearance-row button.active{ background: var(--primary); color:#fff; border-color:transparent; }
+.settings-footnote{ font-size:11px; color: var(--text2); margin-top: 6px; line-height:1.4; }
+.version-row{ display:flex; justify-content:space-between; font-size:13px; padding: 10px 0; color: var(--text2); }
+
+/* ---------- Login ---------- */
+#login-screen{
+  min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding: 30px; text-align:center; max-width:420px; margin:0 auto;
+}
+@media (min-width: 760px){
+  #login-screen{
+    min-height: 0;
+    height: min(880px, 92vh);
+    border-radius: 44px;
+    box-shadow: 0 30px 70px -20px rgba(0,0,0,.35), 0 0 0 1px color-mix(in srgb, var(--text2) 12%, transparent);
+    border: 1px solid rgba(255,255,255,.4);
+    background: color-mix(in srgb, var(--card) 78%, transparent);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  }
+}
+#login-screen .logo{ font-size:64px; margin-bottom:6px; }
+#login-screen h1{ font-size:26px; margin: 0 0 4px; }
+#login-screen p{ color: var(--text2); font-size:13px; margin: 0 0 28px; }
+.field{
+  width:100%; padding: 13px 16px; border-radius:16px; border: 1.5px solid color-mix(in srgb, var(--text2) 25%, transparent);
+  background: var(--card); margin-bottom:12px; font-size:14px; color: var(--text);
+}
+.field:focus{ outline:2px solid var(--primary); }
+.login-error{ color: var(--danger); font-size:12px; font-weight:700; margin: 4px 0 12px; min-height:14px; }
+
+/* Scrollbar tidiness */
+::-webkit-scrollbar{ width:0; height:0; }
