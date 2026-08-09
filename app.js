@@ -402,22 +402,20 @@ function renderHome() { if (currentTab === 'home') { document.getElementById('sc
 function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 // Icon helper — renders a Lucide icon placeholder that gets hydrated
-// into real inline SVG by the MutationObserver below, wherever it
-// ends up on the page (screen content, modals, tab bar, all of it).
+// into real inline SVG on a fixed interval, wherever it ends up on
+// the page (screen content, modals, tab bar, all of it). Uses a plain
+// poll instead of a MutationObserver watching the whole document —
+// a mutation-triggered observer can end up re-triggering itself every
+// time createIcons() touches the DOM, which pegs the CPU. A timer is
+// simple and can't spiral like that.
 function ic(name, cls = '') { return `<i data-lucide="${name}" class="ic ${cls}"></i>`; }
 (function hydrateIconsForever() {
-  let scheduled = false;
   const run = () => {
-    scheduled = false;
-    try { window.lucide?.createIcons(); } catch { /* best-effort */ }
+    try {
+      if (document.querySelector('[data-lucide]')) window.lucide?.createIcons();
+    } catch { /* best-effort */ }
   };
-  // Batch with requestAnimationFrame instead of running synchronously on
-  // every single mutation — avoids hammering the main thread when a
-  // render swaps in a big chunk of HTML at once.
-  const schedule = () => { if (!scheduled) { scheduled = true; requestAnimationFrame(run); } };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', schedule);
-  else schedule();
-  new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
+  setInterval(run, 250);
 })();
 
 
