@@ -3,7 +3,7 @@
 // Ported from the StudyPet.swiftpm SwiftUI app. All state persists to
 // localStorage, mirroring the original's @AppStorage-backed models.
 //
-// Quizzim has three real chat sources: ChatGPT and Claude open as
+// Quizzim has two real chat sources: ChatGPT opens as
 // their own sites (new tab — they block being embedded, since they
 // send X-Frame-Options/CSP frame-ancestors restrictions, so a truly
 // embedded chat like the SwiftUI version's WKWebView isn't possible
@@ -1061,7 +1061,7 @@ Stay strictly on studying and learning topics. If asked something unrelated to s
 // their training data just isn't evaluated for it the way English (or
 // even German/French/Spanish) is. It's closely related to Dutch/
 // English so it often still comes out usable, but expect more mistakes
-// than English. ChatGPT/Claude chat (opened as their own sites) aren't
+// than English. ChatGPT chat (opened as its own site) isn't
 // affected by this setting since they're not prompted by this app.
 // ---------------------------------------------------------------
 const AI_LANGUAGES = {
@@ -1080,10 +1080,10 @@ function offlineIsSupported() { return !!navigator.gpu; }
 
 function offlineUnavailableMessage() {
   if (!offlineIsSupported()) {
-    return "Quizzim's offline AI needs a browser with WebGPU — recent Chrome/Edge/Brave/Firefox, or Safari on iOS 26+/macOS 26+. Use ChatGPT or Claude instead for now.";
+    return "Quizzim's offline AI needs a browser with WebGPU — recent Chrome/Edge/Brave/Firefox, or Safari on iOS 26+/macOS 26+. Use ChatGPT instead for now.";
   }
   if (offlineEngineState === 'error') {
-    return offlineEngineError || "Couldn't load the offline model. Try again, or use ChatGPT/Claude instead.";
+    return offlineEngineError || "Couldn't load the offline model. Try again, or use ChatGPT instead.";
   }
   return '';
 }
@@ -1105,7 +1105,7 @@ async function ensureOfflineEngine(onProgress) {
     return engine;
   } catch (err) {
     offlineEngineState = 'error';
-    offlineEngineError = "Couldn't load the offline model — check your connection for the first-time download, or try ChatGPT/Claude instead.";
+    offlineEngineError = "Couldn't load the offline model — check your connection for the first-time download, or try ChatGPT instead.";
     throw err;
   }
 }
@@ -1189,7 +1189,7 @@ async function generateFlashcardsOffline(text, count, onProgress, onBatchProgres
 }
 
 // ---------------------------------------------------------------
-// QUIZZIM — three real chat sources (ChatGPT, Claude, and a fully
+// QUIZZIM — two real chat sources (ChatGPT and a fully
 // offline local model), plus flashcards and curated quizzes.
 // ---------------------------------------------------------------
 function loadThreads() {
@@ -1220,32 +1220,15 @@ function persistOfflineThreadIfNeeded() {
 
 function quizzimTemplate() {
   const threads = loadThreads().sort((a,b) => b.updatedAt - a.updatedAt);
-  const model = localStorage.getItem(StorageKeys.quizzimModel) || 'chatgpt';
+  const model = localStorage.getItem(StorageKeys.quizzimModel) || 'ondevice';
   const modelMeta = {
     chatgpt: { name: 'ChatGPT', url: 'https://chatgpt.com', icon: 'message-circle' },
-    claude: { name: 'Claude', url: 'https://claude.ai/new', icon: 'sparkle' },
     ondevice: { name: 'Offline AI', icon: 'cpu' },
   };
   return `
     <h2 style="margin:0 0 4px;font-size:20px;">${ic('brain','ic-inline')} Quizzim</h2>
     <p style="margin:0 0 16px;color:var(--text2);font-size:13px;">Your study chat companion.</p>
 
-    <div class="quiz-model-row" data-model="chatgpt" style="${model==='chatgpt'?'':'opacity:.7;'}cursor:pointer;">
-      <span class="qi">${ic('message-circle')}</span>
-      <div style="flex:1;">
-        <div class="qt">ChatGPT</div>
-        <div class="qs">Your own ChatGPT account — no API key, no per-message cost</div>
-      </div>
-      <span class="badge-locked">${model==='chatgpt' ? 'ACTIVE' : 'SELECT'}</span>
-    </div>
-    <div class="quiz-model-row" data-model="claude" style="${model==='claude'?'':'opacity:.7;'}cursor:pointer;">
-      <span class="qi">${ic('sparkle')}</span>
-      <div style="flex:1;">
-        <div class="qt">Claude</div>
-        <div class="qs">Your own Claude account — no API key, no per-message cost</div>
-      </div>
-      <span class="badge-locked">${model==='claude' ? 'ACTIVE' : 'SELECT'}</span>
-    </div>
     <div class="quiz-model-row" data-model="ondevice" style="${model==='ondevice'?'':'opacity:.7;'}cursor:pointer;">
       <span class="qi">${ic('cpu')}</span>
       <div style="flex:1;">
@@ -1253,6 +1236,14 @@ function quizzimTemplate() {
         <div class="qs">Runs a real local model right in your browser — private, no account, works with no internet after the first download</div>
       </div>
       <span class="badge-locked">${model==='ondevice' ? 'ACTIVE' : 'SELECT'}</span>
+    </div>
+    <div class="quiz-model-row" data-model="chatgpt" style="${model==='chatgpt'?'':'opacity:.7;'}cursor:pointer;">
+      <span class="qi">${ic('message-circle')}</span>
+      <div style="flex:1;">
+        <div class="qt">ChatGPT</div>
+        <div class="qs">Your own ChatGPT account — no API key, no per-message cost</div>
+      </div>
+      <span class="badge-locked">${model==='chatgpt' ? 'ACTIVE' : 'SELECT'}</span>
     </div>
     <div class="quiz-model-row quiz-disabled-row">
       <span class="qi">${ic('cloud')}</span>
@@ -1284,7 +1275,7 @@ function quizzimTemplate() {
         threads.map(t => `
           <div class="quiz-thread" data-id="${t.id}">
             <div>
-              <div class="qtt">${modelMeta[t.model||'chatgpt'].icon} ${escapeHtml(t.title)}</div>
+              <div class="qtt">${modelMeta[t.model||'ondevice'].icon} ${escapeHtml(t.title)}</div>
               <div class="qtd">${new Date(t.updatedAt).toLocaleString()}</div>
             </div>
             <button data-del="${t.id}">🗑</button>
@@ -1307,7 +1298,7 @@ function afterRenderQuizzim() {
     const title = prompt('Label this session (e.g. the subject you\'re studying):', 'New Chat');
     if (!title) return;
     const threads = loadThreads();
-    threads.push({ id: crypto.randomUUID(), title, updatedAt: Date.now(), model: localStorage.getItem(StorageKeys.quizzimModel) || 'chatgpt' });
+    threads.push({ id: crypto.randomUUID(), title, updatedAt: Date.now(), model: localStorage.getItem(StorageKeys.quizzimModel) || 'ondevice' });
     saveThreads(threads);
     renderScreen();
   });
@@ -1324,7 +1315,7 @@ function afterRenderQuizzim() {
         renderScreen();
         return;
       }
-      const url = t.model === 'claude' ? 'https://claude.ai/new' : 'https://chatgpt.com';
+      const url = 'https://chatgpt.com';
       window.open(url, '_blank', 'noopener');
     });
   });
@@ -1335,12 +1326,12 @@ function afterRenderQuizzim() {
     renderScreen();
   }));
 
-  const model = localStorage.getItem(StorageKeys.quizzimModel) || 'chatgpt';
+  const model = localStorage.getItem(StorageKeys.quizzimModel) || 'ondevice';
   const area = document.getElementById('quiz-active-area');
   if (model === 'ondevice') {
     renderOfflineChatArea(area);
   } else {
-    const meta = model === 'claude' ? { name: 'Claude', url: 'https://claude.ai/new', icon: 'sparkle' } : { name: 'ChatGPT', url: 'https://chatgpt.com', icon: 'message-circle' };
+    const meta = { name: 'ChatGPT', url: 'https://chatgpt.com', icon: 'message-circle' };
     area.innerHTML = `
       <div class="card">
         <p style="font-size:13px;margin:0 0 12px;">${meta.name} can't be embedded directly on a regular web page — it blocks that. Tapping below opens your real ${meta.name} conversation in a new tab, signed in with your own account.</p>
@@ -1359,11 +1350,9 @@ function renderOfflineChatArea(area) {
         <p style="font-size:13px;margin:0 0 10px;">${offlineUnavailableMessage()}</p>
         <div class="quiz-feature-row" style="margin:0;">
           <button class="btn-secondary" id="fallback-chatgpt">Switch to ChatGPT</button>
-          <button class="btn-secondary" id="fallback-claude">Switch to Claude</button>
         </div>
       </div>`;
     document.getElementById('fallback-chatgpt').addEventListener('click', () => { localStorage.setItem(StorageKeys.quizzimModel, 'chatgpt'); renderScreen(); });
-    document.getElementById('fallback-claude').addEventListener('click', () => { localStorage.setItem(StorageKeys.quizzimModel, 'claude'); renderScreen(); });
     return;
   }
 
@@ -1677,7 +1666,7 @@ function runFlashDeck(cards) {
 // AI QUIZZES — generated on the fly by the offline local model
 // (same engine/plumbing as Quizzim chat and Flashcards). Needs the
 // offline model, since there's no server/API-key backend to generate
-// with otherwise; ChatGPT/Claude open as separate sites and can't
+// with otherwise; ChatGPT opens as a separate site and can't
 // hand structured data back into this app.
 // ---------------------------------------------------------------
 const QUIZ_INSTRUCTIONS = `You are Quizzim's quiz generator, part of the StudyPet app. Given a topic, write a multiple-choice quiz a student could use to test themselves.
@@ -2004,7 +1993,7 @@ function openSettings() {
       <p class="settings-footnote">Locks in your study sessions with a distraction-minimal timer and requires confirmation to leave early. This does not block other apps or sites on your device.</p>
 
       <div class="section-title">Quizzim</div>
-      <p class="settings-footnote">Quizzim supports ChatGPT, Claude, and a fully offline local AI (runs in-browser via WebGPU). Apple's Cloud model source has no web equivalent and stays disabled.</p>
+      <p class="settings-footnote">Quizzim supports ChatGPT and a fully offline local AI (runs in-browser via WebGPU). Apple's Cloud model source has no web equivalent and stays disabled.</p>
       <p style="font-size:12px;font-weight:700;margin:10px 0 6px;">Offline AI model size</p>
       <div class="model-size-row" id="model-size-row">
         <button data-choice="auto" class="${(localStorage.getItem(StorageKeys.offlineModelChoice)||'auto')==='auto' ? 'active' : ''}">
@@ -2023,7 +2012,7 @@ function openSettings() {
 
       <p style="font-size:12px;font-weight:700;margin:14px 0 6px;">AI language</p>
       ${chipRowHTML('ai-language-row', Object.entries(AI_LANGUAGES).map(([key, l]) => ({ value: key, label: l.label })), currentAiLanguage())}
-      <p class="settings-footnote">Applies to the offline AI's chat, flashcards, and quizzes. ${currentAiLanguage() === 'af' ? "Heads up — Afrikaans isn't an officially supported language for these small offline models, so expect more mistakes than you'd see in English. It's closely related to Dutch/English so it usually still comes out usable." : "ChatGPT/Claude open as their own sites and aren't affected by this setting."}</p>
+      <p class="settings-footnote">Applies to the offline AI's chat, flashcards, and quizzes. ${currentAiLanguage() === 'af' ? "Heads up — Afrikaans isn't an officially supported language for these small offline models, so expect more mistakes than you'd see in English. It's closely related to Dutch/English so it usually still comes out usable." : "ChatGPT opens as its own site and isn't affected by this setting."}</p>
       <button class="btn-secondary" id="clear-offline-cache-btn" style="width:100%;margin-top:6px;">🧹 Clear Offline AI Cache</button>
       <p class="settings-footnote">If the offline AI keeps failing to load or crashes the tab, a partial download from a bad connection is the usual cause — this wipes the cached model so the next load starts fresh.</p>
 
