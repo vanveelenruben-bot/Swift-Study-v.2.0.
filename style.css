@@ -37,21 +37,6 @@ body{
   min-height: 100vh;
   transition: background .25s ease, color .25s ease;
 }
-/* On anything wider than a phone (tablets, desktop), present the app as
-   a floating device card on a calm backdrop instead of stretched
-   edge-to-edge. One soft glow directly behind the card — not two
-   clashing accent blobs in opposite corners, which read as muddy once
-   the primary/secondary colors overlap in the middle. */
-@media (min-width: 700px){
-  body{
-    background:
-      radial-gradient(ellipse 900px 700px at 50% 42%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 70%),
-      radial-gradient(ellipse 1400px 1000px at 50% 100%, color-mix(in srgb, var(--text) 6%, transparent), transparent 60%),
-      var(--bg);
-    display:flex; align-items:center; justify-content:center;
-    padding: 40px 24px;
-  }
-}
 h1,h2,h3, .pixel{
   font-family: 'Baloo 2', system-ui, sans-serif;
 }
@@ -61,31 +46,16 @@ input{ font-family: inherit; }
 .hidden{ display:none !important; }
 
 /* ---------- App shell ---------- */
+/* Full-bleed on every screen size — phone, tablet, or desktop. No
+   floating "device card," no backdrop; the app just fills the
+   viewport like a real installed app would. */
 #app{
-  max-width: 480px;
+  width: 100%;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
-}
-/* Tablet: give the card noticeably more room than the phone width so
-   it doesn't look like a postage stamp lost in empty space. */
-@media (min-width: 700px) and (max-width: 1099px){
-  #app{
-    width: min(600px, 88vw);
-    max-width: 600px;
-  }
-}
-@media (min-width: 700px){
-  #app{
-    min-height: 0;
-    height: min(880px, 92vh);
-    border-radius: 44px;
-    overflow: hidden;
-    box-shadow: 0 40px 90px -24px rgba(0,0,0,.5), 0 0 0 1px color-mix(in srgb, var(--text2) 14%, transparent);
-    border: 1px solid rgba(255,255,255,.4);
-  }
 }
 
 
@@ -467,23 +437,8 @@ input{ font-family: inherit; }
 
 /* ---------- Login ---------- */
 #login-screen{
-  min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:100vh; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
   padding: 30px; text-align:center; max-width:420px; margin:0 auto;
-}
-@media (min-width: 700px) and (max-width: 1099px){
-  #login-screen{ width: min(600px, 88vw); max-width:600px; }
-}
-@media (min-width: 700px){
-  #login-screen{
-    min-height: 0;
-    height: min(880px, 92vh);
-    border-radius: 44px;
-    box-shadow: 0 40px 90px -24px rgba(0,0,0,.5), 0 0 0 1px color-mix(in srgb, var(--text2) 14%, transparent);
-    border: 1px solid rgba(255,255,255,.4);
-    background: color-mix(in srgb, var(--card) 78%, transparent);
-    backdrop-filter: blur(18px) saturate(1.4);
-    -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  }
 }
 #login-screen .logo{ font-size:64px; margin-bottom:6px; }
 #login-screen h1{ font-size:26px; margin: 0 0 4px; }
