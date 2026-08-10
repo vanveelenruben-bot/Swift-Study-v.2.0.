@@ -1,5 +1,5 @@
 /* ===================================================================
-   Study Pet — Web
+   Swift Study — Web
    Cozy, minimalist, pixel-ish visual language ported from the original
    SwiftUI app's Theme.swift / AppColorTheme.swift. Color variables are
    set at runtime by app.js (see THEMES in app.js) based on the chosen
@@ -37,18 +37,19 @@ body{
   min-height: 100vh;
   transition: background .25s ease, color .25s ease;
 }
-/* On anything wider than a phone, give the app a proper backdrop and
-   present it as a floating "device" card instead of a page stretched
-   edge-to-edge — this is the "looks weird on desktop" fix. Mobile
-   layout (the default rules above/below) is untouched. */
-@media (min-width: 760px){
+/* On anything wider than a phone (tablets, desktop), present the app as
+   a floating device card on a calm backdrop instead of stretched
+   edge-to-edge. One soft glow directly behind the card — not two
+   clashing accent blobs in opposite corners, which read as muddy once
+   the primary/secondary colors overlap in the middle. */
+@media (min-width: 700px){
   body{
     background:
-      radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--primary) 30%, transparent), transparent 55%),
-      radial-gradient(circle at 85% 90%, color-mix(in srgb, var(--secondary) 30%, transparent), transparent 55%),
+      radial-gradient(ellipse 900px 700px at 50% 42%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 70%),
+      radial-gradient(ellipse 1400px 1000px at 50% 100%, color-mix(in srgb, var(--text) 6%, transparent), transparent 60%),
       var(--bg);
     display:flex; align-items:center; justify-content:center;
-    padding: 40px 20px;
+    padding: 40px 24px;
   }
 }
 h1,h2,h3, .pixel{
@@ -68,16 +69,25 @@ input{ font-family: inherit; }
   flex-direction: column;
   position: relative;
 }
-@media (min-width: 760px){
+/* Tablet: give the card noticeably more room than the phone width so
+   it doesn't look like a postage stamp lost in empty space. */
+@media (min-width: 700px) and (max-width: 1099px){
+  #app{
+    width: min(600px, 88vw);
+    max-width: 600px;
+  }
+}
+@media (min-width: 700px){
   #app{
     min-height: 0;
     height: min(880px, 92vh);
     border-radius: 44px;
     overflow: hidden;
-    box-shadow: 0 30px 70px -20px rgba(0,0,0,.35), 0 0 0 1px color-mix(in srgb, var(--text2) 12%, transparent);
+    box-shadow: 0 40px 90px -24px rgba(0,0,0,.5), 0 0 0 1px color-mix(in srgb, var(--text2) 14%, transparent);
     border: 1px solid rgba(255,255,255,.4);
   }
 }
+
 
 .screen{
   flex: 1;
@@ -460,12 +470,15 @@ input{ font-family: inherit; }
   min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
   padding: 30px; text-align:center; max-width:420px; margin:0 auto;
 }
-@media (min-width: 760px){
+@media (min-width: 700px) and (max-width: 1099px){
+  #login-screen{ width: min(600px, 88vw); max-width:600px; }
+}
+@media (min-width: 700px){
   #login-screen{
     min-height: 0;
     height: min(880px, 92vh);
     border-radius: 44px;
-    box-shadow: 0 30px 70px -20px rgba(0,0,0,.35), 0 0 0 1px color-mix(in srgb, var(--text2) 12%, transparent);
+    box-shadow: 0 40px 90px -24px rgba(0,0,0,.5), 0 0 0 1px color-mix(in srgb, var(--text2) 14%, transparent);
     border: 1px solid rgba(255,255,255,.4);
     background: color-mix(in srgb, var(--card) 78%, transparent);
     backdrop-filter: blur(18px) saturate(1.4);

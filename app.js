@@ -1,5 +1,5 @@
 // ===================================================================
-// Study Pet — Web
+// Swift Study — Web
 // Ported from the StudyPet.swiftpm SwiftUI app. All state persists to
 // localStorage, mirroring the original's @AppStorage-backed models.
 //
@@ -17,7 +17,6 @@
 
 const StorageKeys = {
   isLoggedIn: 'studypet.isLoggedIn',
-  email: 'studypet.email',
   petData: 'studypet.petData',
   focusModeEnabled: 'studypet.focusModeEnabled',
   appearance: 'studypet.appearance',
@@ -32,7 +31,10 @@ const StorageKeys = {
   quizCount: 'studypet.quizzim.quizCount',
   flashcardDecks: 'studypet.quizzim.decks',
   quizScores: 'studypet.quizzim.scores',
+  godMode: 'studypet.debug.godMode',
 };
+
+function isGodMode() { return localStorage.getItem(StorageKeys.godMode) === 'true'; }
 
 const GameConstants = {
   feedCost: 15,
@@ -217,8 +219,8 @@ function showFeedback(msg) {
 }
 
 function feedPet() {
-  if (pet.coins < GameConstants.feedCost) { showFeedback('Not enough coins.'); return; }
-  pet.coins -= GameConstants.feedCost;
+  if (!isGodMode() && pet.coins < GameConstants.feedCost) { showFeedback('Not enough coins.'); return; }
+  if (!isGodMode()) pet.coins -= GameConstants.feedCost;
   pet.hunger = Math.min(100, pet.hunger + GameConstants.feedHungerReduction);
   pet.happiness = Math.min(100, pet.happiness + GameConstants.feedHappinessIncrease);
   savePet();
@@ -239,6 +241,7 @@ function renamePet() {
 }
 
 function spendCoins(amount) {
+  if (isGodMode()) return true;
   if (pet.coins < amount) { showFeedback('Not enough coins.'); return false; }
   pet.coins -= amount;
   savePet();
@@ -307,6 +310,7 @@ const TABS = [
   { id: 'games', label: 'Games', icon: 'gamepad-2' },
   { id: 'quizzim', label: 'Quizzim', icon: 'brain' },
   { id: 'progress', label: 'Progress', icon: 'bar-chart-3' },
+  { id: 'debug', label: 'Debug', icon: 'flask-conical' },
 ];
 
 function renderTabbar() {
@@ -333,6 +337,7 @@ function renderScreen() {
   else if (currentTab === 'games') { screen.innerHTML = gamesTemplate(); afterRenderGames(); }
   else if (currentTab === 'quizzim') { screen.innerHTML = quizzimTemplate(); afterRenderQuizzim(); }
   else if (currentTab === 'progress') { screen.innerHTML = progressTemplate(); }
+  else if (currentTab === 'debug') { screen.innerHTML = debugTemplate(); afterRenderDebug(); }
 }
 
 // ---------------------------------------------------------------
@@ -1891,6 +1896,206 @@ function progressTemplate() {
 }
 
 // ---------------------------------------------------------------
+// DEBUG / ADMIN — internal-only tab for testing. Lets you set pet
+// state, coins, and progress stats directly instead of grinding for
+// them, plus a few destructive/utility tools for QA. Not linked from
+// anywhere a real user would find; it's just another tab in the bar.
+// ---------------------------------------------------------------
+function debugTemplate() {
+  const god = isGodMode();
+  const wins = parseInt(localStorage.getItem(StorageKeys.pingPongWins) || '0', 10);
+  const tttWins = parseInt(localStorage.getItem(StorageKeys.tttWins) || '0', 10);
+  return `
+    <h2 style="margin:0 0 4px;font-size:20px;">${ic('flask-conical','ic-inline')} Debug</h2>
+    <p style="margin:0 0 16px;color:var(--text2);font-size:13px;">Internal testing tools — not visible to real users.</p>
+
+    <div class="toggle-row">
+      <span>${ic('infinity','ic-inline')} God Mode (free feed/shop/games)</span>
+      <label class="switch"><input type="checkbox" id="god-mode-toggle" ${god?'checked':''}><span class="slider-pill"></span></label>
+    </div>
+
+    <div class="section-title">Coins &amp; Level</div>
+    <div class="card">
+      <div class="version-row"><span>Coins</span><span>${pet.coins}</span></div>
+      <div class="chip-row">
+        <button data-coins="10">+10</button>
+        <button data-coins="100">+100</button>
+        <button data-coins="1000">+1000</button>
+        <button data-coins="-100">-100</button>
+      </div>
+      <div class="version-row"><span>Level</span><span>${pet.level} (from ${pet.totalCoinsEarned} total earned)</span></div>
+      <div class="chip-row">
+        <button data-level="1">+1 Level</button>
+        <button data-level="5">+5 Levels</button>
+      </div>
+    </div>
+
+    <div class="section-title">Pet Stats</div>
+    <div class="card">
+      ${statBarHTML('drumstick', 'Hunger', pet.hunger, 'var(--primary)')}
+      ${statBarHTML('heart', 'Happiness', pet.happiness, 'var(--heart)')}
+      ${statBarHTML('sparkles', 'Bathroom', pet.bathroom, 'var(--bathroom)')}
+      <div class="chip-row" style="margin-top:10px;">
+        <button id="debug-max-stats">Max All (100)</button>
+        <button id="debug-min-stats">Min All (0)</button>
+        <button id="debug-hungry">Force Hungry</button>
+        <button id="debug-sad">Force Sad</button>
+        <button id="debug-happy">Force Happy</button>
+      </div>
+    </div>
+
+    <div class="section-title">Pets</div>
+    <div class="card">
+      <p style="font-size:12px;color:var(--text2);margin:0 0 8px;">Owned: ${pet.ownedSpecies.length}/${PET_SPECIES.length} · Active: ${speciesById(pet.species).name}</p>
+      <div class="chip-row">
+        <button id="debug-unlock-pets">Unlock All Pets</button>
+        <button id="debug-lock-pets">Reset to Cat Only</button>
+      </div>
+      <div class="chip-row" id="debug-species-row" style="margin-top:8px;">
+        ${PET_SPECIES.map(s => `<button data-species="${s.id}" class="${pet.species===s.id?'active':''}">${s.emoji} ${s.name}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="section-title">Progress Stats</div>
+    <div class="card">
+      <div class="version-row"><span>Minutes Studied</span><span>${pet.totalMinutesStudied}</span></div>
+      <div class="version-row"><span>Sessions Completed</span><span>${pet.sessionsCompleted}</span></div>
+      <div class="version-row"><span>Study Streak</span><span>${pet.studyStreak}</span></div>
+      <div class="version-row"><span>Ping Pong Wins</span><span>${wins}</span></div>
+      <div class="version-row"><span>Tic Tac Toe Wins</span><span>${tttWins}</span></div>
+      <div class="chip-row" style="margin-top:8px;">
+        <button id="debug-add-session">+1 Session (30min)</button>
+        <button id="debug-add-streak">+1 Streak Day</button>
+        <button id="debug-add-wins">+1 Win (both games)</button>
+      </div>
+    </div>
+
+    <div class="section-title">Time Skip</div>
+    <div class="card">
+      <p style="font-size:12px;color:var(--text2);margin:0 0 8px;">Fast-forward decay/fill loops without waiting.</p>
+      <div class="chip-row">
+        <button id="debug-skip-mood">Skip 1hr Mood Decay</button>
+        <button id="debug-skip-bathroom">Fill Bathroom Now</button>
+      </div>
+    </div>
+
+    <div class="section-title">Save Data</div>
+    <div class="card">
+      <p style="font-size:12px;color:var(--text2);margin:0 0 8px;">Copy/paste the pet save to move state between browsers, or reset it.</p>
+      <textarea id="debug-save-json" class="field" style="height:90px;font-family:monospace;font-size:11px;" readonly>${escapeHtml(JSON.stringify(pet))}</textarea>
+      <div class="chip-row" style="margin-top:8px;">
+        <button id="debug-copy-save">Copy JSON</button>
+        <button id="debug-paste-save">Load Pasted JSON</button>
+      </div>
+      <button class="btn-secondary btn-danger" id="debug-reset-pet" style="width:100%;margin-top:10px;">Reset Pet to Starter</button>
+      <button class="btn-secondary btn-danger" id="debug-wipe-all" style="width:100%;margin-top:8px;">⚠️ Wipe ALL Local Data</button>
+    </div>
+  `;
+}
+
+function afterRenderDebug() {
+  document.getElementById('god-mode-toggle').addEventListener('change', (e) => {
+    localStorage.setItem(StorageKeys.godMode, e.target.checked ? 'true' : 'false');
+    showFeedback(e.target.checked ? 'God Mode on.' : 'God Mode off.');
+  });
+
+  document.querySelectorAll('[data-coins]').forEach(b => b.addEventListener('click', () => {
+    pet.coins = Math.max(0, pet.coins + parseInt(b.dataset.coins, 10));
+    savePet(); renderScreen();
+  }));
+  document.querySelectorAll('[data-level]').forEach(b => b.addEventListener('click', () => {
+    const levelsToAdd = parseInt(b.dataset.level, 10);
+    pet.totalCoinsEarned += levelsToAdd * 100;
+    pet.level = GameConstants.level(pet.totalCoinsEarned);
+    savePet(); renderScreen();
+  }));
+
+  document.getElementById('debug-max-stats').addEventListener('click', () => {
+    pet.hunger = 100; pet.happiness = 100; pet.bathroom = 100;
+    savePet(); renderScreen();
+  });
+  document.getElementById('debug-min-stats').addEventListener('click', () => {
+    pet.hunger = 0; pet.happiness = 0; pet.bathroom = 0;
+    savePet(); renderScreen();
+  });
+  document.getElementById('debug-hungry').addEventListener('click', () => { pet.hunger = 10; savePet(); renderScreen(); });
+  document.getElementById('debug-sad').addEventListener('click', () => { pet.happiness = 10; savePet(); renderScreen(); });
+  document.getElementById('debug-happy').addEventListener('click', () => { pet.happiness = 100; pet.hunger = 100; savePet(); renderScreen(); });
+
+  document.getElementById('debug-unlock-pets').addEventListener('click', () => {
+    pet.ownedSpecies = PET_SPECIES.map(s => s.id);
+    savePet(); renderScreen();
+  });
+  document.getElementById('debug-lock-pets').addEventListener('click', () => {
+    pet.ownedSpecies = ['cat']; pet.species = 'cat';
+    savePet(); renderScreen();
+  });
+  document.querySelectorAll('#debug-species-row [data-species]').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.species;
+    if (!pet.ownedSpecies.includes(id)) pet.ownedSpecies.push(id);
+    pet.species = id;
+    savePet(); renderScreen();
+  }));
+
+  document.getElementById('debug-add-session').addEventListener('click', () => {
+    pet.totalMinutesStudied += 30;
+    pet.sessionsCompleted += 1;
+    savePet(); renderScreen();
+  });
+  document.getElementById('debug-add-streak').addEventListener('click', () => {
+    pet.studyStreak += 1;
+    savePet(); renderScreen();
+  });
+  document.getElementById('debug-add-wins').addEventListener('click', () => {
+    localStorage.setItem(StorageKeys.pingPongWins, String(parseInt(localStorage.getItem(StorageKeys.pingPongWins)||'0',10) + 1));
+    localStorage.setItem(StorageKeys.tttWins, String(parseInt(localStorage.getItem(StorageKeys.tttWins)||'0',10) + 1));
+    renderScreen();
+  });
+
+  document.getElementById('debug-skip-mood').addEventListener('click', () => {
+    const ticks = Math.round(3600 / GameConstants.moodDecayTickSeconds);
+    pet.hunger = Math.max(0, pet.hunger - GameConstants.hungerDecayPerTick * ticks);
+    pet.happiness = Math.max(0, pet.happiness - GameConstants.happinessDecayPerTick * ticks);
+    savePet(); renderScreen();
+  });
+  document.getElementById('debug-skip-bathroom').addEventListener('click', () => {
+    pet.bathroom = 100;
+    savePet(); renderScreen();
+  });
+
+  document.getElementById('debug-copy-save').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(pet));
+      showFeedback('Save copied to clipboard.');
+    } catch { showFeedback('Copy failed — select the text manually.'); }
+  });
+  document.getElementById('debug-paste-save').addEventListener('click', () => {
+    const raw = prompt('Paste pet save JSON:');
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      pet = { ...starterPet(), ...parsed };
+      const owned = new Set(Array.isArray(pet.ownedSpecies) ? pet.ownedSpecies : []);
+      owned.add(pet.species || 'cat');
+      pet.ownedSpecies = Array.from(owned);
+      savePet(); renderScreen();
+      showFeedback('Save loaded.');
+    } catch { showFeedback('Invalid JSON.'); }
+  });
+  document.getElementById('debug-reset-pet').addEventListener('click', () => {
+    if (!confirm('Reset pet to starter state? This cannot be undone.')) return;
+    pet = starterPet();
+    savePet(); renderScreen();
+  });
+  document.getElementById('debug-wipe-all').addEventListener('click', () => {
+    if (!confirm('Wipe ALL local data (pet, settings, quiz threads, everything)? This cannot be undone.')) return;
+    localStorage.clear();
+    location.reload();
+  });
+}
+
+
+// ---------------------------------------------------------------
 // PET SHOP MODAL — ported from PetShopView.swift / PetShopConstants
 // ---------------------------------------------------------------
 function openPetShop() {
@@ -1966,7 +2171,7 @@ function openSettings() {
       <div class="modal-header"><h3>Settings</h3><button id="settings-done">Done</button></div>
 
       <div class="section-title">Account</div>
-      <p style="font-size:13px;color:var(--text2);margin:0 0 8px;">${localStorage.getItem(StorageKeys.email) || 'Signed in'}</p>
+      <p style="font-size:13px;color:var(--text2);margin:0 0 8px;">Signed in with secret code</p>
       <button class="btn-secondary btn-danger" id="logout-btn">Log Out</button>
 
       <div class="section-title">Appearance</div>
@@ -2078,19 +2283,20 @@ function showApp() {
   startBathroomLoop();
   startMoodDecayLoop();
 }
+const SECRET_CODE = '251297';
 function wireLogin() {
   const err = document.getElementById('login-error');
-  function attempt(mode) {
-    const email = document.getElementById('login-email').value.trim();
-    const pw = document.getElementById('login-password').value.trim();
-    if (!email || !pw) { err.textContent = mode === 'login' ? 'Please enter an email and password.' : 'Please enter an email and password to create an account.'; return; }
+  const input = document.getElementById('login-code');
+  function attempt() {
+    const code = input.value.trim();
+    if (!code) { err.textContent = 'Please enter the code.'; return; }
+    if (code !== SECRET_CODE) { err.textContent = 'Incorrect code.'; input.value = ''; input.focus(); return; }
     err.textContent = '';
-    localStorage.setItem(StorageKeys.email, email);
     localStorage.setItem(StorageKeys.isLoggedIn, 'true');
     showApp();
   }
-  document.getElementById('login-btn').addEventListener('click', () => attempt('login'));
-  document.getElementById('create-account-btn').addEventListener('click', () => attempt('create'));
+  document.getElementById('login-btn').addEventListener('click', attempt);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') attempt(); });
 }
 
 // ---------------------------------------------------------------
